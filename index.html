@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>주방용품 트렌드 대시보드</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+KR:wght@400;600;700&family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f4f0;
+    --green: #2a5c3f;
+    --green-light: #3d7a57;
+    --green-pale: #e8f0eb;
+    --gold: #c9973a;
+    --silver: #8a9bb0;
+    --bronze: #a0674a;
+    --text: #1a1a1a;
+    --text-muted: #666;
+    --card-bg: #ffffff;
+    --border: #e0ddd6;
+    --shadow-hover: 0 8px 32px rgba(42,92,63,0.18);
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--bg); font-family: 'Noto Sans KR', sans-serif; color: var(--text); min-height: 100vh; display: flex; flex-direction: column; }
+
+  header { position: sticky; top: 0; z-index: 100; background: var(--green); color: white; padding: 0 24px; box-shadow: 0 2px 16px rgba(0,0,0,0.15); }
+  .header-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; height: 64px; gap: 16px; }
+  .header-title { font-family: 'Noto Serif KR', serif; font-size: 1.2rem; font-weight: 700; white-space: nowrap; }
+  .header-title span { color: #a8d5b5; font-size: 0.72rem; font-family: 'Noto Sans KR', sans-serif; font-weight: 300; margin-left: 10px; }
+  .stats-bar { display: flex; gap: 20px; align-items: center; }
+  .stat { text-align: center; }
+  .stat-num { font-size: 1.1rem; font-weight: 700; color: #a8d5b5; line-height: 1; }
+  .stat-label { font-size: 0.62rem; color: rgba(255,255,255,0.6); margin-top: 2px; }
+
+  .cat-wrap { background: white; border-bottom: 2px solid var(--border); position: sticky; top: 64px; z-index: 90; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+  .cat-inner { max-width: 1200px; margin: 0 auto; display: flex; overflow-x: auto; scrollbar-width: none; }
+  .cat-inner::-webkit-scrollbar { display: none; }
+  .cat-btn { flex-shrink: 0; padding: 14px 20px; border: none; background: none; cursor: pointer; font-family: 'Noto Sans KR', sans-serif; font-size: 0.82rem; font-weight: 500; color: var(--text-muted); border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.2s; white-space: nowrap; }
+  .cat-btn:hover { color: var(--green); background: var(--green-pale); }
+  .cat-btn.active { color: var(--green); font-weight: 700; border-bottom-color: var(--green); }
+
+  main { flex: 1; max-width: 1200px; margin: 0 auto; width: 100%; padding: 28px 24px 48px; }
+  .section-title { font-family: 'Noto Serif KR', serif; font-size: 1.3rem; font-weight: 700; color: var(--green); margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
+  .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .source-note { font-size: 0.72rem; color: var(--text-muted); margin-bottom: 18px; padding-left: 2px; }
+
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
+
+  .card { background: var(--card-bg); border-radius: 14px; border: 1.5px solid var(--border); padding: 18px; cursor: pointer; text-decoration: none; color: inherit; display: block; transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1); position: relative; overflow: hidden; }
+  .card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--green); transform: scaleX(0); transform-origin: left; transition: transform 0.22s ease; }
+  .card:hover { border-color: var(--green); box-shadow: var(--shadow-hover); transform: translateY(-3px); }
+  .card:hover::before { transform: scaleX(1); }
+
+  .card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+  .rank-badge { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 700; flex-shrink: 0; }
+  .rank-1 { background: var(--gold); color: white; }
+  .rank-2 { background: var(--silver); color: white; }
+  .rank-3 { background: var(--bronze); color: white; }
+  .rank-other { background: #eee; color: #888; }
+  .platform-badge { font-size: 0.68rem; font-weight: 600; padding: 3px 8px; border-radius: 20px; white-space: nowrap; }
+  .pb-coupang { background: #fff0e6; color: #e84118; }
+  .pb-naver { background: #e6f4ea; color: #03c75a; }
+  .pb-amazon { background: #fff8e6; color: #c07000; }
+  .pb-ohouse { background: #e6f0ff; color: #2563eb; }
+
+  .card-name { font-family: 'Noto Serif KR', serif; font-size: 0.95rem; font-weight: 700; line-height: 1.4; margin-bottom: 6px; }
+  .card-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 0.7rem; color: var(--green); font-weight: 600; background: var(--green-pale); padding: 2px 8px; border-radius: 4px; margin-bottom: 7px; }
+  .card-reason { font-size: 0.78rem; color: var(--text-muted); line-height: 1.6; }
+  .card-source { font-size: 0.65rem; color: #bbb; margin-top: 8px; border-top: 1px solid #f0ede8; padding-top: 6px; }
+  .card-arrow { position: absolute; bottom: 14px; right: 16px; font-size: 0.75rem; color: var(--green); opacity: 0; transition: opacity 0.2s; }
+  .card:hover .card-arrow { opacity: 1; }
+
+  footer { background: white; border-top: 1.5px solid var(--border); padding: 14px 24px; text-align: center; font-size: 0.72rem; color: var(--text-muted); line-height: 1.8; }
+
+  @media (max-width: 900px) { .grid { grid-template-columns: repeat(2,1fr); } .stats-bar { display: none; } }
+  @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } .header-title span { display: none; } main { padding: 20px 16px 40px; } .cat-btn { padding: 12px 14px; font-size: 0.78rem; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <div class="header-title">🍳 주방용품 트렌드<span>비전자 주방용품 · 근거 기반</span></div>
+    <div class="stats-bar">
+      <div class="stat"><div class="stat-num" id="stat-total">-</div><div class="stat-label">총 제품수</div></div>
+      <div class="stat"><div class="stat-num">12</div><div class="stat-label">카테고리</div></div>
+      <div class="stat"><div class="stat-num" id="stat-date">-</div><div class="stat-label">데이터 기준</div></div>
+    </div>
+  </div>
+</header>
+<div class="cat-wrap"><div class="cat-inner" id="cat-tabs"></div></div>
+<main>
+  <div class="section-title" id="section-title">전체</div>
+  <div class="source-note" id="source-note"></div>
+  <div class="grid" id="card-grid"></div>
+</main>
+<footer>
+  데이터 출처: 한국소비자원 시험·평가 (2024) · KMAC 한국산업의 브랜드파워 K-BPI (2026) · 한국소비자포럼 퍼스트브랜드 대상 (2026) · 노써치 자체 테스트 (2025~2026) · 각 제조사 공식 정보<br>
+  ※ 카드를 클릭하면 해당 플랫폼 검색 결과 페이지로 이동합니다.
+</footer>
+<script>
+const SEARCH_URL={coupang:q=>`https://www.coupang.com/np/search?q=${encodeURIComponent(q)}`,naver:q=>`https://search.shopping.naver.com/search/all?query=${encodeURIComponent(q)}`,amazon:q=>`https://www.amazon.com/s?k=${encodeURIComponent(q)}`,ohouse:q=>`https://ohou.se/search?query=${encodeURIComponent(q)}&feed_type=store`};
+const PL={coupang:'🛒 쿠팡',naver:'🟢 네이버',amazon:'📦 아마존',ohouse:'🏠 오늘의집'};
+const CAT_SRC={'전체':'각 카테고리별 출처 참고','프라이팬':'출처: 한국소비자원 13개 제품 시험·평가 (2024) + 노써치 20개 제품 자체 테스트 (2026.04)','냄비':'출처: KMAC K-BPI (2026), 노써치 자체 테스트, 제조사 공식 정보','밀폐·보관':'출처: KMAC K-BPI 밀폐용기 23년 연속 1위 (2026), 한국소비자포럼 퍼스트브랜드 대상 10년 연속 1위 (2026)','조리도구':'출처: 노써치 자체 테스트, 제조사 공식 스펙 정보','도마·칼':'출처: 노써치 가성비/절삭력/유지력/사용편의성 직접 테스트 (2026.01), 제조사 공식 정보','믹싱볼·채반':'출처: 제조사 공식 스펙 및 인증 정보','텀블러·스텐컵':'출처: 노써치 16개 제품 자체 테스트 (2025.02), 제조사 공식 정보','주전자·티포트':'출처: 제조사 공식 스펙 및 인증 정보','그릇·식기':'출처: 제조사 공식 스펙 및 인증 정보','수저·커트러리':'출처: KMAC K-BPI (2026), 제조사 공식 스펙 정보','주방수납':'출처: 제조사 공식 스펙 및 인증 정보','오븐·베이킹':'출처: 제조사 공식 스펙 및 인증 정보'};
+const CATS=['전체','프라이팬','냄비','밀폐·보관','조리도구','도마·칼','믹싱볼·채반','텀블러·스텐컵','주전자·티포트','그릇·식기','수저·커트러리','주방수납','오븐·베이킹'];
+const DATA=[
+// 프라이팬
+{n:'테팔 인덕션 티타늄 3X 퍼펙트 레지스트',p:'naver',c:'프라이팬',badge:'노써치 프리미엄 픽 (2026.04)',r:'기름 없이 계란후라이 눌어붙음 없음. 열 균일도·보존력 우수. 노써치 20개 프라이팬 테스트 결과.',src:'노써치 자체 테스트 (2026.04.17)',q:'테팔 인덕션 티타늄 3X 퍼펙트 레지스트'},
+{n:'PN풍년 마레 카놀리 IH 프라이팬',p:'coupang',c:'프라이팬',badge:'한국소비자원 코팅 내구성 우수',r:'한국소비자원 13개 프라이팬 시험에서 코팅 내구성 우수 판정. 무게 600g으로 테스트 제품 중 가장 가벼운 편.',src:'한국소비자원 시험·평가 (2024)',q:'PN풍년 마레 카놀리 IH 프라이팬'},
+{n:'도루코 퓨어 라이트 애쉬블루 IH',p:'naver',c:'프라이팬',badge:'한국소비자원 코팅 내구성 우수',r:'한국소비자원 시험에서 코팅 내구성 우수, 조리공간 2,182ml로 테스트 제품 중 가장 넓음.',src:'한국소비자원 시험·평가 (2024)',q:'도루코 퓨어 라이트 애쉬블루 IH 프라이팬'},
+{n:'해피콜 루시드 프라이팬 IH',p:'coupang',c:'프라이팬',badge:'한국소비자원 시험 대상 제품',r:'한국소비자원 13개 프라이팬 시험 대상 제품. 인덕션 호환.',src:'한국소비자원 시험·평가 (2024)',q:'해피콜 루시드 프라이팬 IH'},
+{n:'락앤락 핸디 프라이팬',p:'naver',c:'프라이팬',badge:'한국소비자원 가성비 우수군 포함',r:'한국소비자원 시험 대상 제품. 가성비 우수 제품군 포함 (18,900원대 기준).',src:'한국소비자원 시험·평가 (2024)',q:'락앤락 핸디 프라이팬'},
+{n:'ELO 뉴웨이브 IH 프라이팬',p:'naver',c:'프라이팬',badge:'한국소비자원 조리공간 2위',r:'한국소비자원 시험에서 조리공간 2,043ml로 2위. 오일로드(요철 조리면) 구조 탑재.',src:'한국소비자원 시험·평가 (2024)',q:'ELO 뉴웨이브 IH 프라이팬'},
+{n:'모던하우스 레인포레스트 스톤코팅팬',p:'ohouse',c:'프라이팬',badge:'한국소비자원 코팅 내구성 우수',r:'한국소비자원 시험에서 코팅 내구성 우수 판정. 무게 647g으로 가벼운 편.',src:'한국소비자원 시험·평가 (2024)',q:'모던하우스 레인포레스트 스톤코팅팬'},
+{n:'즈윌링(헨켈) 마르퀴나 플러스',p:'naver',c:'프라이팬',badge:'한국소비자원 시험 대상 제품',r:'독일 즈윌링 산하 헨켈스 브랜드. 한국소비자원 13개 프라이팬 시험 대상 제품 중 하나.',src:'한국소비자원 시험·평가 (2024)',q:'즈윌링 헨켈스 마르퀴나 플러스 프라이팬'},
+{n:'리빙스타 벨라쿠진 우드패턴 IH',p:'coupang',c:'프라이팬',badge:'한국소비자원 가성비 우수군 포함',r:'한국소비자원 가성비 우수 제품군 포함 (17,900원대 기준). 인덕션 호환.',src:'한국소비자원 시험·평가 (2024)',q:'리빙스타 벨라쿠진 우드패턴 IH'},
+{n:'퍼기 스텐 316 프라이팬',p:'naver',c:'프라이팬',badge:'',r:'무연마제 처리로 초기 세척 편리. 통 5중 구조, 스텐 316 소재(제조사 공식). 스텐 프라이팬 입문용으로 다수 매체 소개.',src:'제조사 공식 정보 (2026)',q:'퍼기 스텐 316 프라이팬'},
+// 냄비
+{n:'락앤락 냄비 IH',p:'coupang',c:'냄비',badge:'K-BPI 주방용품 10년 연속 1위 (2026)',r:'KMAC 한국산업의 브랜드파워(K-BPI) 2026년 주방용품 부문 10년 연속 1위 수상.',src:'KMAC K-BPI (2026)',q:'락앤락 냄비 IH'},
+{n:'PN풍년 IH 압력솥',p:'coupang',c:'냄비',badge:'',r:'국내 압력솥 대표 브랜드. 인덕션 호환 라인업. 안전 밸브 탑재(제조사 공식).',src:'PN풍년 제조사 공식 정보',q:'PN풍년 IH 압력솥'},
+{n:'르크루제 라운드 코코트',p:'naver',c:'냄비',badge:'',r:'1925년 설립 프랑스 브랜드(제조사 공식). 에나멜 주철. 오븐·인덕션·가스 모두 호환. 평생 품질 보증(제조사 공식).',src:'르크루제 제조사 공식 정보',q:'르크루제 라운드 코코트'},
+{n:'스타우브 피코 코코트',p:'naver',c:'냄비',badge:'',r:'뚜껑 안쪽 돌기 구조로 수분 순환(제조사 공식 특허 구조). 프랑스 스타우브 브랜드.',src:'스타우브 제조사 공식 정보',q:'스타우브 피코 코코트'},
+{n:'글라스락 내열유리 냄비',p:'naver',c:'냄비',badge:'',r:'내열유리 소재. 전자레인지·오븐 사용 가능(제조사 공식). 음식 보관 겸용.',src:'글라스락 제조사 공식 정보',q:'글라스락 내열유리 냄비'},
+{n:'해피콜 스타 편수냄비',p:'naver',c:'냄비',badge:'',r:'인덕션·가스 모두 호환(제조사 공식). 코팅 처리로 눌어붙음 방지.',src:'해피콜 제조사 공식 정보',q:'해피콜 스타 편수냄비'},
+{n:'쿡셀 전골냄비',p:'coupang',c:'냄비',badge:'',r:'에어리스 코팅 기술 적용(제조사 공식). 전골·찌개 용도.',src:'쿡셀 제조사 공식 정보',q:'쿡셀 전골냄비'},
+{n:'All-Clad D3 스테인리스 소스팬',p:'amazon',c:'냄비',badge:'',r:'3겹 클래드 구조(스테인리스-알루미늄-스테인리스, 제조사 공식). 미국산 제조.',src:'All-Clad 제조사 공식 정보',q:'All-Clad D3 stainless saucepan'},
+{n:'테팔 퍼펙트쿡 냄비세트',p:'coupang',c:'냄비',badge:'',r:'인덕션 호환. 티타늄 코팅 적용(제조사 공식). 세트 구성.',src:'테팔 제조사 공식 정보',q:'테팔 퍼펙트쿡 냄비세트'},
+{n:'이케아 IKEA 365+ 냄비',p:'ohouse',c:'냄비',badge:'',r:'스테인리스 소재. 인덕션 포함 모든 열원 호환(이케아 공식). 뚜껑 별도 구매 가능.',src:'이케아 공식 제품 정보',q:'이케아 냄비 365'},
+// 밀폐보관
+{n:'락앤락 비스프리 트라이탄 밀폐용기',p:'coupang',c:'밀폐·보관',badge:'K-BPI 밀폐용기 23년 연속 1위 (2026)',r:'KMAC K-BPI 2026년 밀폐용기 부문 23년 연속 1위. 트라이탄 소재, BPA 미사용(제조사 공식).',src:'KMAC K-BPI 2026 / 락앤락 제조사 공식',q:'락앤락 비스프리 트라이탄'},
+{n:'락앤락 프리저핏 냉동 밀폐용기',p:'coupang',c:'밀폐·보관',badge:'퍼스트브랜드 대상 밀폐용기 10년 연속 1위 (2026)',r:'냉동 보관 전용 설계(제조사 공식). 한국소비자포럼 퍼스트브랜드 대상 밀폐용기 부문 10년 연속 1위(2026).',src:'한국소비자포럼 퍼스트브랜드 대상 (2026)',q:'락앤락 프리저핏 냉동용기'},
+{n:'락앤락 프레쉬 마에스트로 진공용기',p:'naver',c:'밀폐·보관',badge:'',r:'3단계 맞춤 진공 케어로 최대 50일 신선도 유지(락앤락 제조사 공식 수치).',src:'락앤락 제조사 공식 (2025)',q:'락앤락 프레쉬 마에스트로 진공용기'},
+{n:'글라스락 내열유리 밀폐용기 세트',p:'naver',c:'밀폐·보관',badge:'',r:'내열유리 소재. 전자레인지·오븐 사용 가능(제조사 공식). 플라스틱 없는 유리 용기.',src:'글라스락 제조사 공식 정보',q:'글라스락 내열유리 밀폐용기'},
+{n:'타파웨어 모듈러 보울',p:'naver',c:'밀폐·보관',badge:'',r:'BPA 프리 소재(제조사 공식). 스택 보관 가능 구조. 타파웨어 정품.',src:'타파웨어 제조사 공식 정보',q:'타파웨어 모듈러 보울 밀폐용기'},
+{n:'OXO 팝 컨테이너',p:'naver',c:'밀폐·보관',badge:'',r:'버튼 하나로 개폐되는 에어타이트 구조(제조사 특허). 미국 OXO 브랜드.',src:'OXO 제조사 공식 정보',q:'OXO 팝 컨테이너'},
+{n:'이케아 PRUTA 밀폐용기 17종 세트',p:'ohouse',c:'밀폐·보관',badge:'',r:'17가지 사이즈 구성(이케아 공식). PP 소재, 식기세척기 사용 가능(이케아 공식).',src:'이케아 공식 제품 정보',q:'이케아 PRUTA 밀폐용기'},
+{n:'에코센스 히트락 올트라이탄 밀폐용기',p:'coupang',c:'밀폐·보관',badge:'',r:'트라이탄 소재(제조사 공식). 내열성 보유. 홈쇼핑 판매 제품.',src:'제조사 공식 정보',q:'에코센스 히트락 올트라이탄 밀폐용기'},
+{n:'Rubbermaid Brilliance 밀폐용기',p:'amazon',c:'밀폐·보관',badge:'',r:'트라이탄 소재. 100% 누수 방지 구조(제조사 공식). 미국 Rubbermaid 브랜드.',src:'Rubbermaid 제조사 공식 정보',q:'Rubbermaid Brilliance food storage'},
+{n:'지퍼락 냉동 보관백',p:'coupang',c:'밀폐·보관',badge:'',r:'냉동 특화 소재. 이중 잠금 지퍼 구조(SC존슨 제조사 공식).',src:'SC존슨 제조사 공식 정보',q:'지퍼락 냉동백'},
+// 조리도구
+{n:'OXO 굿그립 실리콘 주걱 세트',p:'naver',c:'조리도구',badge:'',r:'인체공학 그립 설계. 내열 실리콘 200°C(제조사 공식). 미국 OXO 브랜드.',src:'OXO 제조사 공식 정보',q:'OXO 굿그립 실리콘 주걱'},
+{n:'조셉조셉 스텍 조리도구 5종 세트',p:'naver',c:'조리도구',badge:'',r:'수직 스택 수납 방식(제조사 특허). 영국 조셉조셉 브랜드.',src:'조셉조셉 제조사 공식 정보',q:'조셉조셉 스텍 조리도구'},
+{n:'해피콜 실리콘 뒤집개',p:'coupang',c:'조리도구',badge:'',r:'200°C 내열 실리콘(제조사 공식). 코팅 팬 스크래치 방지 소재.',src:'해피콜 제조사 공식 정보',q:'해피콜 실리콘 뒤집개'},
+{n:'르크루제 너도밤나무 우드 주걱',p:'naver',c:'조리도구',badge:'',r:'천연 너도밤나무 소재(르크루제 제조사 공식). 코팅 팬 표면에 안전.',src:'르크루제 제조사 공식 정보',q:'르크루제 우드 주걱'},
+{n:'RÖSLE 스테인리스 거품기',p:'amazon',c:'조리도구',badge:'',r:'독일 RÖSLE 브랜드. 18/10 스테인리스(제조사 공식). 식기세척기 가능.',src:'RÖSLE 제조사 공식 정보',q:'Rosle stainless steel whisk'},
+{n:'이케아 GRUNKA 조리도구 세트',p:'ohouse',c:'조리도구',badge:'',r:'이케아 공식 제품. 나일론 소재. 내열 처리(이케아 공식 스펙).',src:'이케아 공식 제품 정보',q:'이케아 그룬카 조리도구'},
+{n:'조셉조셉 서랍 트레이',p:'naver',c:'조리도구',badge:'',r:'칸막이 조절 가능 구조(제조사 공식). 조리도구 수납 전용 설계.',src:'조셉조셉 제조사 공식 정보',q:'조셉조셉 서랍 조리도구 트레이'},
+{n:'실리콘 오일브러시 (분리세척형)',p:'naver',c:'조리도구',badge:'',r:'실리콘 솔은 잔모 빠짐 없음. 뚜껑·솔 분리세척 가능 구조.',src:'일반 제품 특성',q:'실리콘 오일브러시 분리세척'},
+{n:'OXO 굿그립 국자',p:'naver',c:'조리도구',badge:'',r:'인체공학 소프트 그립(제조사 특허). 18/8 스테인리스 소재. OXO 정품.',src:'OXO 제조사 공식 정보',q:'OXO 굿그립 국자'},
+{n:'키친에이드 오프셋 스패츌라',p:'amazon',c:'조리도구',badge:'',r:'오프셋(꺾인) 날 구조로 케이크 아이싱 최적화. 스테인리스 블레이드. 키친에이드 공식.',src:'키친에이드 제조사 공식 정보',q:'KitchenAid offset spatula'},
+// 도마칼
+{n:'도루코 마이쉐프 식도',p:'naver',c:'도마·칼',badge:'노써치 가성비 픽 (2026.01)',r:'노써치 칼 자체 테스트에서 가성비 최우수 판정. 4~5만원대 칼과 내구성 유사(노써치 평가).',src:'노써치 칼 자체 테스트 (2026.01)',q:'도루코 마이쉐프 식도'},
+{n:'헨켈스(즈윌링) 셰프나이프',p:'naver',c:'도마·칼',badge:'',r:'독일 졸링겐 제조(제조사 공식). 아이스 하든 스틸 소재(제조사 공식).',src:'헨켈스 제조사 공식 정보',q:'헨켈스 셰프나이프'},
+{n:'글로벌 G-2 셰프나이프',p:'naver',c:'도마·칼',badge:'',r:'일본 요시킨 제조(제조사 공식). 크롬몰리브덴 바나듐 스틸(제조사 공식). 손잡이 일체형 스테인리스.',src:'글로벌 제조사 공식 정보',q:'글로벌 G2 셰프나이프'},
+{n:'빅토리녹스 피어링 나이프',p:'naver',c:'도마·칼',badge:'',r:'스위스 빅토리녹스 정품. 고탄소 스테인리스 스틸(제조사 공식).',src:'빅토리녹스 제조사 공식 정보',q:'빅토리녹스 피어링 나이프'},
+{n:'조셉조셉 컬러 도마 4종 세트',p:'ohouse',c:'도마·칼',badge:'',r:'색상으로 용도 구분(고기·생선·채소·과일) 위생 관리 설계(제조사 공식). 조셉조셉 정품.',src:'조셉조셉 제조사 공식 정보',q:'조셉조셉 컬러 도마세트'},
+{n:'OXO 대나무 도마',p:'naver',c:'도마·칼',badge:'',r:'천연 대나무 소재(OXO 공식). 대나무는 천연 항균성 보유하는 소재로 알려짐.',src:'OXO 제조사 공식 정보',q:'OXO 대나무 도마'},
+{n:'이케아 BERGTUNGA 도마 세트',p:'ohouse',c:'도마·칼',badge:'',r:'플라스틱 소재. 이케아 공식 제품. 식기세척기 가능(이케아 공식).',src:'이케아 공식 제품 정보',q:'이케아 베르그툰가 도마'},
+{n:'Wüsthof Classic 빵칼',p:'amazon',c:'도마·칼',badge:'',r:'독일 졸링겐 제조(제조사 공식). 웨이브 날, 빵 절단 전용 설계.',src:'Wüsthof 제조사 공식 정보',q:'Wusthof Classic bread knife'},
+{n:'Shun Classic 산토쿠 나이프',p:'amazon',c:'도마·칼',badge:'',r:'일본 세키 제조(제조사 공식). VG-MAX 스틸, 다마스커스 클래딩(제조사 공식).',src:'Shun 제조사 공식 정보',q:'Shun Classic santoku knife'},
+{n:'에피큐리언 도마',p:'amazon',c:'도마·칼',badge:'NSF 식품 안전 인증',r:'나무+종이 복합소재(Richlite). NSF 식품 안전 인증(공식 인증). 식기세척기 가능(제조사 공식).',src:'에피큐리언 제조사 공식 / NSF 인증',q:'Epicurean cutting board'},
+// 믹싱볼채반
+{n:'OXO 스테인리스 믹싱볼 3종 세트',p:'naver',c:'믹싱볼·채반',badge:'',r:'미끄럼 방지 바닥 처리, 내부 측정 눈금 표시(제조사 공식). 18/8 스테인리스.',src:'OXO 제조사 공식 정보',q:'OXO 스테인리스 믹싱볼 세트'},
+{n:'락앤락 스텐 믹싱볼',p:'coupang',c:'믹싱볼·채반',badge:'K-BPI 주방용품 10년 연속 1위 브랜드',r:'18-8 스테인리스(제조사 공식). 뚜껑 포함으로 냉장 보관 겸용. 락앤락 KMAC K-BPI 2026 주방용품 10년 연속 1위.',src:'KMAC K-BPI 2026 / 제조사 공식',q:'락앤락 스텐 믹싱볼'},
+{n:'이케아 BLANDA BLANK 믹싱볼',p:'ohouse',c:'믹싱볼·채반',badge:'',r:'스테인리스 스틸 소재. 이케아 공식 제품. 3가지 사이즈 라인업(이케아 공식).',src:'이케아 공식 제품 정보',q:'이케아 블란다 블랑크 믹싱볼'},
+{n:'RÖSLE 파인 메쉬 스트레이너',p:'amazon',c:'믹싱볼·채반',badge:'',r:'독일 RÖSLE 제조. 18/10 스테인리스 미세 메쉬(제조사 공식). 식기세척기 가능.',src:'RÖSLE 제조사 공식 정보',q:'Rosle fine mesh strainer'},
+{n:'OXO 굿그립 채반',p:'naver',c:'믹싱볼·채반',badge:'',r:'싱크대 위 거치용 다리 구조. 18/8 스테인리스 메쉬. OXO 공식 제품.',src:'OXO 제조사 공식 정보',q:'OXO 굿그립 채반'},
+{n:'키친에이드 세라믹 믹싱볼 5qt',p:'amazon',c:'믹싱볼·채반',badge:'',r:'키친에이드 스탠드 믹서 5qt 호환(제조사 공식). 비드 핸들 포함.',src:'키친에이드 제조사 공식 정보',q:'KitchenAid ceramic mixing bowl 5qt'},
+{n:'무인양품 스테인리스 채반',p:'ohouse',c:'믹싱볼·채반',badge:'',r:'무인양품 공식 제품. 스테인리스 소재. 여러 사이즈 라인업.',src:'무인양품 공식 제품 정보',q:'무인양품 스텐 채반'},
+{n:'조셉조셉 네스트 믹싱볼 세트',p:'naver',c:'믹싱볼·채반',badge:'',r:'스택 수납 구조(제조사 공식). 논슬립 바닥 처리. 영국 조셉조셉.',src:'조셉조셉 제조사 공식 정보',q:'조셉조셉 네스트 믹싱볼'},
+{n:'이케아 IDEALISK 믹싱볼',p:'ohouse',c:'믹싱볼·채반',badge:'',r:'스테인리스 스틸 소재. 이케아 공식 제품. 식기세척기 가능(이케아 공식).',src:'이케아 공식 제품 정보',q:'이케아 이데알리스크 믹싱볼'},
+{n:'야채 탈수기 (채반+볼 세트형)',p:'coupang',c:'믹싱볼·채반',badge:'',r:'원심력 이용 수분 제거 구조. 채반+볼 일체형 세트. 쌈채소·샐러드 탈수 용도.',src:'일반 제품 구조 정보',q:'야채 탈수기 채반'},
+// 텀블러
+{n:'모슈 텀블러',p:'naver',c:'텀블러·스텐컵',badge:'노써치 텀블러 추천 픽 (2025.02)',r:'노써치 16개 제품 테스트: 물 샘 없음 확인. 뚜껑·빨대 부품 별도 구매 가능. 어린이 텀블러로도 추천(노써치).',src:'노써치 자체 테스트 (2025.02.18)',q:'모슈 텀블러'},
+{n:'스위스윙커 커피 텀블러',p:'naver',c:'텀블러·스텐컵',badge:'노써치 세척 편의·휴대성 우수',r:'노써치 테스트: 수평 기울임 시 물 샘 없음. 클립형 음용구, 버블티 빨대 호환. 세척 편의 우수 평가.',src:'노써치 자체 테스트 (2025.02.18)',q:'스위스윙커 커피 텀블러'},
+{n:'락앤락 메트로 텀블러',p:'coupang',c:'텀블러·스텐컵',badge:'K-BPI 주방용품 10년 연속 1위 브랜드',r:'락앤락 브랜드. KMAC K-BPI 2026 주방용품 부문 10년 연속 1위. 원터치 오픈 뚜껑 구조(제조사 공식).',src:'KMAC K-BPI 2026 / 제조사 공식',q:'락앤락 메트로 텀블러'},
+{n:'스탠리 클래식 진공 텀블러',p:'naver',c:'텀블러·스텐컵',badge:'',r:'1913년 설립 미국 브랜드(제조사 공식). 진공 단열 구조. 노써치 테스트에서 세척 편의 일부 아쉬움 평가.',src:'노써치 테스트 (2025.02.18) / 제조사 공식',q:'스탠리 클래식 진공 텀블러'},
+{n:'하이드로플라스크 스탠다드 마우스',p:'coupang',c:'텀블러·스텐컵',badge:'',r:'TempShield 이중 진공 단열(제조사 등록 기술 명칭). 미국 하이드로플라스크 정품.',src:'하이드로플라스크 제조사 공식 정보',q:'하이드로플라스크 스탠다드 텀블러'},
+{n:'YETI 람블러 텀블러',p:'amazon',c:'텀블러·스텐컵',badge:'',r:'18/8 스테인리스, DuraCoat 파우더코팅(제조사 등록 기술 명칭). 미국 YETI 정품.',src:'YETI 제조사 공식 정보',q:'YETI Rambler tumbler'},
+{n:'Contigo 오토씰 여행 머그',p:'amazon',c:'텀블러·스텐컵',badge:'',r:'AUTOSEAL 자동 밀봉 기술(제조사 등록 기술 명칭). 미국 Contigo 정품.',src:'Contigo 제조사 공식 정보',q:'Contigo autoseal travel mug'},
+{n:'스노우피크 티타늄 싱글 머그',p:'naver',c:'텀블러·스텐컵',badge:'',r:'순수 티타늄 소재(일본 스노우피크 제조사 공식). 가볍고 녹슬지 않음.',src:'스노우피크 제조사 공식 정보',q:'스노우피크 티타늄 싱글 머그'},
+{n:'킨토 트래블 텀블러',p:'ohouse',c:'텀블러·스텐컵',badge:'',r:'18-8 스테인리스, 진공 이중 단열(일본 킨토 제조사 공식).',src:'킨토 제조사 공식 정보',q:'킨토 트래블 텀블러'},
+{n:'이케아 FÖRFINA 텀블러',p:'ohouse',c:'텀블러·스텐컵',badge:'',r:'스테인리스 이중 단열 구조(이케아 공식 스펙). 이케아 공식 제품.',src:'이케아 공식 제품 정보',q:'이케아 포르피나 텀블러'},
+// 주전자
+{n:'HARIO V60 드립 주전자',p:'naver',c:'주전자·티포트',badge:'',r:'일본 HARIO 정품(1921년 설립, 제조사 공식). 세밀한 거위목 노즐로 물줄기 조절 가능.',src:'HARIO 제조사 공식 정보',q:'하리오 V60 드립 주전자'},
+{n:'Fellow Stagg EKG 드립 주전자',p:'amazon',c:'주전자·티포트',badge:'',r:'1°F(0.5°C) 단위 온도 조절(Fellow 제조사 공식). 거위목 노즐 설계. 미국 Fellow 정품.',src:'Fellow 제조사 공식 정보',q:'Fellow Stagg EKG electric kettle'},
+{n:'드롱기 스틸리코 거위목 주전자',p:'coupang',c:'주전자·티포트',badge:'',r:'이탈리아 드롱기 브랜드. 거위목 노즐 설계(제조사 공식). 핸드드립 커피 용도.',src:'드롱기 제조사 공식 정보',q:'드롱기 스틸리코 거위목 주전자'},
+{n:'르크루제 스톤웨어 티포트',p:'naver',c:'주전자·티포트',badge:'',r:'세라믹 스톤웨어 소재(제조사 공식). 직화 불가, 전자레인지 가능. 르크루제 정품.',src:'르크루제 제조사 공식 정보',q:'르크루제 스톤웨어 티포트'},
+{n:'보덤 CHAMBORD 프렌치프레스',p:'naver',c:'주전자·티포트',badge:'',r:'스위스 보덤(1944년 설립, 제조사 공식). 보로실리케이트 내열유리 소재(제조사 공식).',src:'보덤 제조사 공식 정보',q:'보덤 샹보르 프렌치프레스'},
+{n:'OXO BREW 거위목 드립 주전자',p:'amazon',c:'주전자·티포트',badge:'',r:'거위목 노즐. 1L 용량. 논슬립 핸들(OXO 제조사 공식). OXO 정품.',src:'OXO 제조사 공식 정보',q:'OXO BREW pour over kettle'},
+{n:'내열유리 티포트 (허브차용)',p:'coupang',c:'주전자·티포트',badge:'',r:'내열유리 소재. 꽃차·허브차 내용물 시각 확인 가능. 내열유리 소재 특성: 급격한 온도 변화에 강함.',src:'내열유리 소재 일반 특성',q:'내열유리 티포트 허브차'},
+{n:'무인양품 스테인리스 주전자',p:'ohouse',c:'주전자·티포트',badge:'',r:'스테인리스 소재. 인덕션 호환(무인양품 공식 스펙). 무인양품 공식 제품.',src:'무인양품 공식 제품 정보',q:'무인양품 스텐 주전자'},
+{n:'이케아 RIKLIG 티포트',p:'ohouse',c:'주전자·티포트',badge:'',r:'도자기 소재. 거름망 내장(이케아 공식 스펙). 이케아 공식 제품.',src:'이케아 공식 제품 정보',q:'이케아 리클리그 티포트'},
+{n:'킨토 유니티 티포트',p:'ohouse',c:'주전자·티포트',badge:'',r:'보로실리케이트 유리 소재(킨토 제조사 공식). 스테인리스 거름망 내장.',src:'킨토 제조사 공식 정보',q:'킨토 유니티 티포트'},
+// 그릇식기
+{n:'한국도자기 마리에르 식기 4인 세트',p:'naver',c:'그릇·식기',badge:'',r:'국내 한국도자기 브랜드 정품. 전자레인지·식기세척기 가능(제조사 공식).',src:'한국도자기 제조사 공식 정보',q:'한국도자기 마리에르 식기세트'},
+{n:'이케아 DINERA 식기 세트',p:'ohouse',c:'그릇·식기',badge:'',r:'도자기 소재. 전자레인지·식기세척기 가능(이케아 공식). 이케아 공식 제품.',src:'이케아 공식 제품 정보',q:'이케아 디네라 식기세트'},
+{n:'코렐 화이트 식기 세트',p:'coupang',c:'그릇·식기',badge:'',r:'3겹 강화유리 비트리엘 소재(코렐 제조사 공식). 전자레인지·식기세척기 가능.',src:'코렐 제조사 공식 정보',q:'코렐 화이트 식기세트'},
+{n:'무인양품 자기 그릇 시리즈',p:'ohouse',c:'그릇·식기',badge:'',r:'자기 소재. 전자레인지·식기세척기 가능(무인양품 공식). 무인양품 공식 제품.',src:'무인양품 공식 제품 정보',q:'무인양품 자기 그릇'},
+{n:'Lenox Butterfly Meadow 4인 세트',p:'amazon',c:'그릇·식기',badge:'',r:'미국 Lenox 정품. 순수 자기 소재. 식기세척기 가능(제조사 공식).',src:'Lenox 제조사 공식 정보',q:'Lenox Butterfly Meadow dinnerware set'},
+{n:'덴비 헤일로 스톤웨어 세트',p:'amazon',c:'그릇·식기',badge:'',r:'영국 덴비(1809년 설립, 제조사 공식). 오븐·전자레인지·식기세척기 가능(덴비 공식).',src:'덴비 제조사 공식 정보',q:'Denby Halo stoneware set'},
+{n:'킨토 브렉퍼스트 플레이트',p:'ohouse',c:'그릇·식기',badge:'',r:'일본 킨토 공식 제품. 자기 소재. 전자레인지·식기세척기 가능(킨토 공식).',src:'킨토 제조사 공식 정보',q:'킨토 브렉퍼스트 플레이트'},
+{n:'국내산 수제 도자기 국그릇',p:'coupang',c:'그릇·식기',badge:'',r:'국내 생산 도자기. 전자레인지 가능. 두꺼운 두께 구조.',src:'제조사 공식 정보',q:'국내산 수제 도자기 국그릇'},
+{n:'락앤락 원형 접시',p:'coupang',c:'그릇·식기',badge:'K-BPI 주방용품 10년 연속 1위 브랜드',r:'락앤락 브랜드. KMAC K-BPI 2026 주방용품 10년 연속 1위. 전자레인지·식기세척기 가능(제조사 공식).',src:'KMAC K-BPI 2026 / 제조사 공식',q:'락앤락 원형접시'},
+{n:'이케아 GODMIDDAG 식기 세트',p:'ohouse',c:'그릇·식기',badge:'',r:'도자기 소재. 전자레인지·식기세척기 가능(이케아 공식). 이케아 공식 제품.',src:'이케아 공식 제품 정보',q:'이케아 식기세트'},
+// 수저커트러리
+{n:'WMF 뉘메로 커트러리 세트',p:'naver',c:'수저·커트러리',badge:'',r:'독일 WMF(1853년 설립, 제조사 공식). 크로마간 특수강(제조사 공식). 식기세척기 가능.',src:'WMF 제조사 공식 정보',q:'WMF 뉘메로 커트러리세트'},
+{n:'헨켈스 파리 커트러리 세트',p:'naver',c:'수저·커트러리',badge:'',r:'독일 즈윌링 산하 헨켈스. 18/10 스테인리스(제조사 공식). 식기세척기 가능.',src:'헨켈스 제조사 공식 정보',q:'헨켈스 파리 커트러리세트'},
+{n:'락앤락 스텐 수저 세트',p:'coupang',c:'수저·커트러리',badge:'K-BPI 주방용품 10년 연속 1위 브랜드',r:'락앤락 브랜드. KMAC K-BPI 2026 주방용품 10년 연속 1위. 한국식 숟가락+젓가락 구성.',src:'KMAC K-BPI 2026 / 제조사 공식',q:'락앤락 스텐 수저세트'},
+{n:'Oneida 18/10 스테인리스 커트러리',p:'amazon',c:'수저·커트러리',badge:'',r:'미국 Oneida(1880년 설립, 제조사 공식). 18/10 스테인리스(제조사 공식). 식기세척기 가능.',src:'Oneida 제조사 공식 정보',q:'Oneida 18/10 stainless flatware set'},
+{n:'이케아 DRAGON 커트러리 세트',p:'ohouse',c:'수저·커트러리',badge:'',r:'스테인리스 소재. 식기세척기 가능(이케아 공식). 이케아 공식 제품.',src:'이케아 공식 제품 정보',q:'이케아 드래곤 커트러리'},
+{n:'무인양품 스테인리스 수저',p:'ohouse',c:'수저·커트러리',badge:'',r:'스테인리스 소재. 식기세척기 가능(무인양품 공식). 무인양품 공식 제품.',src:'무인양품 공식 제품 정보',q:'무인양품 스텐 수저'},
+{n:'Mepra 이탈리안 커트러리 세트',p:'amazon',c:'수저·커트러리',badge:'',r:'이탈리아 Mepra 정품. 18/10 스테인리스(제조사 공식).',src:'Mepra 제조사 공식 정보',q:'Mepra Italian cutlery set'},
+{n:'어린이 수저 세트',p:'coupang',c:'수저·커트러리',badge:'',r:'아동용 소형 사이즈 설계. 식품 안전 인증 소재. 어린이 전용 경량 구조.',src:'제조사 공식 정보',q:'어린이 수저세트'},
+{n:'대나무 친환경 수저 세트',p:'naver',c:'수저·커트러리',badge:'',r:'천연 대나무 소재. 항균성 보유(대나무 소재 특성). 환경부 친환경 인증 해당 제품 다수 존재.',src:'대나무 소재 특성 / 환경부 인증 기준',q:'대나무 수저세트 친환경'},
+{n:'도시락 겸용 스테인리스 수저 세트',p:'coupang',c:'수저·커트러리',badge:'',r:'케이스 포함 휴대용 구성. 스테인리스 소재. 도시락 병행 사용 가능.',src:'일반 제품 구성 정보',q:'도시락 수저세트 스테인리스'},
+// 주방수납
+{n:'이케아 RÅSKOG 트롤리 카트',p:'ohouse',c:'주방수납',badge:'',r:'이케아 공식 제품. 3단 구성, 이동 바퀴 탑재(이케아 공식). 스틸 소재.',src:'이케아 공식 제품 정보',q:'이케아 로스코그 트롤리 카트'},
+{n:'OXO 서랍 내부 정리 랙',p:'naver',c:'주방수납',badge:'',r:'칸막이 조절 가능 구조(제조사 공식). 서랍 내부 조리도구 정리 전용. OXO 정품.',src:'OXO 제조사 공식 정보',q:'OXO 서랍 수납랙 조리도구'},
+{n:'조셉조셉 서랍 내부 트레이',p:'naver',c:'주방수납',badge:'',r:'조절 가능한 칸막이(제조사 공식). 조리도구 구분 수납 설계. 조셉조셉 정품.',src:'조셉조셉 제조사 공식 정보',q:'조셉조셉 서랍 트레이'},
+{n:'락앤락 냉장고 수납 세트',p:'coupang',c:'주방수납',badge:'K-BPI 주방용품 10년 연속 1위 브랜드',r:'락앤락 브랜드. 냉장고 맞춤 사이즈 설계(제조사 공식). KMAC K-BPI 2026 주방용품 10년 연속 1위.',src:'KMAC K-BPI 2026 / 제조사 공식',q:'락앤락 냉장고 수납'},
+{n:'무인양품 스테인리스 와이어 바스켓',p:'ohouse',c:'주방수납',badge:'',r:'스테인리스 와이어 소재(무인양품 공식). 통기성 보유. 여러 사이즈 라인업.',src:'무인양품 공식 제품 정보',q:'무인양품 와이어 바스켓'},
+{n:'Rubbermaid 풀다운 선반',p:'amazon',c:'주방수납',badge:'',r:'높은 찬장 공간 활용을 위한 당겨 내리는 구조(제조사 공식). Rubbermaid 정품.',src:'Rubbermaid 제조사 공식 정보',q:'Rubbermaid pull down shelf organizer'},
+{n:'Rev-A-Shelf 회전 수납 선반',p:'amazon',c:'주방수납',badge:'',r:'360도 회전 구조로 코너 수납 공간 활용(제조사 공식). 미국 Rev-A-Shelf 정품.',src:'Rev-A-Shelf 제조사 공식 정보',q:'Rev-A-Shelf lazy susan cabinet organizer'},
+{n:'이케아 VARIERA 냄비 뚜껑 정리대',p:'ohouse',c:'주방수납',badge:'',r:'냄비 뚜껑 수직 수납 설계(이케아 공식). 스틸 소재. 이케아 공식 제품.',src:'이케아 공식 제품 정보',q:'이케아 냄비 뚜껑 정리대'},
+{n:'자석 부착형 조미료 수납 세트',p:'naver',c:'주방수납',badge:'',r:'냉장고 옆면 자석 부착 방식. 투명 용기로 내용물 확인 가능. 데드 공간 활용.',src:'일반 제품 구조 정보',q:'자석 냉장고 조미료 수납'},
+{n:'한샘 주방 모듈 선반',p:'ohouse',c:'주방수납',badge:'',r:'국내 한샘 브랜드 정품. 모듈 확장 가능 구조. 다양한 사이즈 라인업(제조사 공식).',src:'한샘 제조사 공식 정보',q:'한샘 주방선반 모듈'},
+// 오븐베이킹
+{n:'실팻 실리콘 베이킹 매트',p:'naver',c:'오븐·베이킹',badge:'',r:'프랑스 Demarle 제조(제조사 공식). 유리섬유 강화 실리콘. 오븐 230°C 사용 가능(제조사 공식). 반영구 사용.',src:'실팻 제조사 공식 정보',q:'실팻 실리콘 베이킹 매트'},
+{n:'노르딕웨어 하프 시트팬',p:'amazon',c:'오븐·베이킹',badge:'',r:'미국 노르딕웨어(1946년 설립, 제조사 공식). 알루미늄 합금. 미국 제조(제조사 공식).',src:'노르딕웨어 제조사 공식 정보',q:'Nordic Ware half sheet pan'},
+{n:'르크루제 스톤웨어 머핀 팬',p:'naver',c:'오븐·베이킹',badge:'',r:'세라믹 스톤웨어. 에나멜 코팅. 오븐 260°C 사용 가능(르크루제 제조사 공식).',src:'르크루제 제조사 공식 정보',q:'르크루제 스톤웨어 머핀팬'},
+{n:'Wilton 9인치 라운드 케이크팬',p:'amazon',c:'오븐·베이킹',badge:'',r:'미국 Wilton 정품. 알루미늄 합금. 논스틱 코팅(제조사 공식).',src:'Wilton 제조사 공식 정보',q:'Wilton 9 inch round cake pan'},
+{n:'Chicago Metallic 식빵 로프팬',p:'amazon',c:'오븐·베이킹',badge:'',r:'미국 Chicago Metallic 정품. 헤비게이지 소재로 균일한 열 분산(제조사 공식).',src:'Chicago Metallic 제조사 공식 정보',q:'Chicago Metallic loaf pan'},
+{n:'OXO 스테인리스 식힘망',p:'naver',c:'오븐·베이킹',badge:'',r:'18/8 스테인리스 소재(제조사 공식). 논스틱 코팅. OXO 정품.',src:'OXO 제조사 공식 정보',q:'OXO 스텐 식힘망'},
+{n:'키친에이드 실리콘 베이킹 매트',p:'naver',c:'오븐·베이킹',badge:'',r:'내열 실리콘 소재. 유산지 대체용 재사용 가능. 키친에이드 공식 제품.',src:'키친에이드 제조사 공식 정보',q:'키친에이드 실리콘 베이킹 매트'},
+{n:'이케아 HEMMABAK 베이킹 세트',p:'ohouse',c:'오븐·베이킹',badge:'',r:'머핀·케이크 틀 포함 세트(이케아 공식). 식기세척기 가능. 이케아 공식 제품.',src:'이케아 공식 제품 정보',q:'이케아 헴마바크 베이킹세트'},
+{n:'RÖSLE 실리콘 케이크 몰드 세트',p:'amazon',c:'오븐·베이킹',badge:'',r:'독일 RÖSLE 정품. 식품등급 실리콘(제조사 공식). 오븐 220°C 사용 가능.',src:'RÖSLE 제조사 공식 정보',q:'Rosle silicone cake mold set'},
+{n:'오덴세 베이킹 도구 세트',p:'coupang',c:'오븐·베이킹',badge:'',r:'국내 오덴세 브랜드. 계량컵·스크래퍼·솔 등 베이킹 기본 도구 세트 구성.',src:'오덴세 제조사 공식 정보',q:'오덴세 베이킹도구 세트'},
+];
+
+function init(){
+  const t=new Date();
+  document.getElementById('stat-date').textContent=`${t.getFullYear()}.${t.getMonth()+1}`;
+  document.getElementById('stat-total').textContent=DATA.length;
+  const tabs=document.getElementById('cat-tabs');
+  CATS.forEach(c=>{
+    const b=document.createElement('button');
+    b.className='cat-btn'+(c==='전체'?' active':'');
+    b.textContent=c;
+    b.onclick=()=>select(c,b);
+    tabs.appendChild(b);
+  });
+  render('전체');
+}
+
+function select(cat,btn){
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('section-title').textContent=cat;
+  document.getElementById('source-note').textContent=CAT_SRC[cat]||'';
+  render(cat);
+}
+
+function render(cat){
+  const g=document.getElementById('card-grid');
+  g.innerHTML='';
+  const list=cat==='전체'?DATA:DATA.filter(d=>d.c===cat);
+  list.forEach((item,i)=>{
+    const r=i+1;
+    const rc=r===1?'rank-1':r===2?'rank-2':r===3?'rank-3':'rank-other';
+    const url=SEARCH_URL[item.p](item.q);
+    const badge=item.badge?`<div class="card-badge">📌 ${item.badge}</div>`:'';
+    const a=document.createElement('a');
+    a.className='card';a.href=url;a.target='_blank';a.rel='noopener noreferrer';
+    a.innerHTML=`
+      <div class="card-top">
+        <span class="rank-badge ${rc}">${r}</span>
+        <span class="platform-badge pb-${item.p}">${PL[item.p]}</span>
+      </div>
+      <div class="card-name">${item.n}</div>
+      ${badge}
+      <div class="card-reason">${item.r}</div>
+      <div class="card-source">출처: ${item.src}</div>
+      <div class="card-arrow">검색 결과 보기 →</div>
+    `;
+    g.appendChild(a);
+  });
+}
+init();
+</script>
+</body>
+</html>
